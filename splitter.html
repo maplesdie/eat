@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>切片工坊 | 本地图片分割工具</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="backdrop" aria-hidden="true"></div>
+
+    <main class="app-shell">
+      <header class="masthead">
+        <div class="masthead__copy">
+          <p class="eyebrow">LOCAL IMAGE SPLITTER</p>
+          <h1>切片工坊</h1>
+          <p class="masthead__subtitle">
+            上传一张图片，在画布上拖拽分割线，按像素精调位置，然后把所有切片一次打包到本地。
+          </p>
+        </div>
+
+        <div class="masthead__note">
+          <span class="masthead__note-tag">离线运行</span>
+          <p>所有裁切都在浏览器本地完成，不上传服务器，适合快速切图和版式拆分。</p>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <aside class="control-panel" aria-label="切图控制台">
+          <section class="panel panel--upload">
+            <div class="panel__heading">
+              <p class="panel__eyebrow">STEP 01</p>
+              <h2>上传图片</h2>
+              <p>支持 PNG、JPG / JPEG、WebP、AVIF 等浏览器可解码格式。</p>
+            </div>
+
+            <label class="upload-dropzone" id="uploadDropzone" for="imageInput">
+              <input
+                id="imageInput"
+                class="visually-hidden"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/avif,image/*"
+              />
+              <span class="upload-dropzone__badge">拖放 / 点击选择</span>
+              <strong>把图片放进这里</strong>
+              <span>单次处理一张图，载入后会自动生成默认分割线。</span>
+            </label>
+
+            <div class="file-pill">
+              <span>当前文件</span>
+              <strong id="currentFileName">未选择</strong>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel__heading">
+              <p class="panel__eyebrow">STEP 02</p>
+              <h2>设置条数</h2>
+              <p>修改条数会按等距重新生成该方向分割线。</p>
+            </div>
+
+            <div class="field-grid">
+              <label class="field">
+                <span class="field__label">横向分割线条数</span>
+                <input id="horizontalCount" type="number" min="0" max="20" value="1" />
+                <small>用于把图片切成多行。</small>
+              </label>
+
+              <label class="field">
+                <span class="field__label">纵向分割线条数</span>
+                <input id="verticalCount" type="number" min="0" max="20" value="1" />
+                <small>用于把图片切成多列。</small>
+              </label>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel__heading">
+              <p class="panel__eyebrow">STEP 03</p>
+              <h2>像素微调</h2>
+              <p>拖拽与输入框共用同一组像素坐标，改一处，另一处会立即同步。</p>
+            </div>
+
+            <div class="line-groups">
+              <section class="line-group" aria-labelledby="horizontalGroupTitle">
+                <div class="line-group__head">
+                  <h3 id="horizontalGroupTitle">横向分割线</h3>
+                  <span class="dimension-chip" id="horizontalHint">1 条</span>
+                </div>
+                <div class="line-list" id="horizontalLineList"></div>
+                <p class="inline-error" id="horizontalError" hidden></p>
+              </section>
+
+              <section class="line-group" aria-labelledby="verticalGroupTitle">
+                <div class="line-group__head">
+                  <h3 id="verticalGroupTitle">纵向分割线</h3>
+                  <span class="dimension-chip" id="verticalHint">1 条</span>
+                </div>
+                <div class="line-list" id="verticalLineList"></div>
+                <p class="inline-error" id="verticalError" hidden></p>
+              </section>
+            </div>
+          </section>
+
+          <section class="panel panel--actions">
+            <div class="panel__heading">
+              <p class="panel__eyebrow">STEP 04</p>
+              <h2>导出切片</h2>
+              <p>先确认分割线位置，再一键打包导出 ZIP。</p>
+            </div>
+
+            <div class="action-row">
+              <button id="resetLinesButton" class="button button--secondary" type="button">
+                重置分割线
+              </button>
+              <button id="downloadButton" class="button button--primary" type="button">
+                下载 ZIP
+              </button>
+            </div>
+
+            <p class="status-message" id="statusMessage" data-tone="info">等待上传图片。</p>
+          </section>
+        </aside>
+
+        <section class="preview-panel" aria-label="图片预览与分割画布">
+          <div class="preview-topbar">
+            <div>
+              <p class="eyebrow">PREVIEW STAGE</p>
+              <h2>主画布</h2>
+            </div>
+
+            <div class="metric-strip">
+              <article class="metric-card">
+                <span>原图尺寸</span>
+                <strong id="dimensionMetric">未载入</strong>
+              </article>
+              <article class="metric-card">
+                <span>切片总数</span>
+                <strong id="sliceMetric">0 张</strong>
+              </article>
+              <article class="metric-card">
+                <span>预览倍率</span>
+                <strong id="scaleMetric">--</strong>
+              </article>
+            </div>
+          </div>
+
+          <div class="preview-viewport" id="previewViewport">
+            <div class="empty-state" id="emptyState">
+              <span class="empty-state__stamp">READY</span>
+              <h3>上传图片后开始切片</h3>
+              <p>预览区会显示可拖拽分割线、像素标签和切片统计。</p>
+            </div>
+
+            <div class="preview-surface" id="previewSurface" hidden>
+              <img id="previewImage" alt="上传图片预览" draggable="false" />
+              <div class="split-layer" id="splitLayer" aria-label="分割线图层"></div>
+            </div>
+          </div>
+
+          <div class="preview-footer">
+            <div class="foot-chip">
+              <span>操作提示</span>
+              <strong>按住线条直接拖动</strong>
+            </div>
+            <div class="foot-chip">
+              <span>坐标基准</span>
+              <strong>全部以原图像素保存</strong>
+            </div>
+            <div class="foot-chip foot-chip--wide">
+              <span>导出状态</span>
+              <strong id="exportStateLabel">待命</strong>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
