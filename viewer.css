@@ -595,13 +595,15 @@ input[type="range"] {
 
 @media (max-width: 680px) {
   .cookbook-shell {
-    width: min(100vw - 0.6rem, 1180px);
+    width: min(100vw - 0.35rem, 1180px);
+    padding-top: max(0.35rem, env(safe-area-inset-top));
   }
 
   .hero,
   .stage-card,
   .control-card {
-    padding: 0.95rem;
+    padding: 0.78rem;
+    border-radius: 24px;
   }
 
   .hero__subtitle,
@@ -612,37 +614,77 @@ input[type="range"] {
   }
 
   .hero {
-    gap: 0.7rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.55rem;
+    padding-bottom: 0.72rem;
+  }
+
+  .hero__copy .eyebrow {
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    margin-bottom: 0.2rem;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+    line-height: 0.92;
+  }
+
+  .hero__meta {
+    min-width: 8.25rem;
   }
 
   .image-stage {
-    min-height: 48svh;
-    padding: 0.7rem;
+    min-height: auto;
+    padding: 3.15rem 2.4rem 0.45rem;
+    background:
+      radial-gradient(circle at top, rgba(255, 255, 255, 0.06), transparent 42%),
+      linear-gradient(180deg, #201d19 0%, #12100e 100%);
+  }
+
+  .image-stage img {
+    width: auto;
+    max-width: 100%;
+    max-height: 72svh;
+    border-radius: 18px;
+  }
+
+  .image-stage.is-portrait img {
+    width: min(84vw, 28rem);
+    max-width: 100%;
+    max-height: none;
+  }
+
+  .image-stage.is-landscape img,
+  .image-stage.is-square img {
+    width: 100%;
+    max-height: none;
   }
 
   .image-nav {
-    width: 2.65rem;
-    height: 2.65rem;
-    margin-top: -1.325rem;
+    width: 2.45rem;
+    height: 2.45rem;
+    margin-top: -1.225rem;
   }
 
   .image-nav span {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
   }
 
   .image-nav--prev {
-    left: 0.45rem;
+    left: 0.28rem;
   }
 
   .image-nav--next {
-    right: 0.45rem;
+    right: 0.28rem;
   }
 
   .cook-toggle {
-    top: 0.45rem;
-    width: 2.8rem;
-    height: 2.8rem;
-    margin-left: -1.4rem;
+    top: 0.42rem;
+    width: 2.55rem;
+    height: 2.55rem;
+    margin-left: -1.275rem;
     border-radius: 0.85rem;
   }
 
@@ -656,12 +698,98 @@ input[type="range"] {
 
   .counter-badge {
     min-height: 2rem;
-    padding: 0.35rem 0.68rem;
-    font-size: 0.88rem;
+    padding: 0.25rem 0.58rem;
+    font-size: 0.8rem;
   }
 
   .progress-panel,
   .thumb-panel {
-    padding: 0.9rem;
+    padding: 0.72rem;
+  }
+
+  .progress-panel {
+    margin-top: -0.1rem;
+  }
+
+  .progress-panel__head strong {
+    font-size: 1.1rem;
+  }
+
+  .progress-panel p {
+    font-size: 0.8rem;
+  }
+
+  .thumb-panel__head {
+    margin-bottom: 0.55rem;
+  }
+
+  .thumb-panel__head h3 {
+    font-size: 0.98rem;
+  }
+
+  .thumb-strip {
+    grid-auto-columns: minmax(72px, 78px);
+    gap: 0.45rem;
+  }
+
+  .thumb-button {
+    padding: 0.36rem;
+    border-radius: 13px;
+  }
+
+  .thumb-button img {
+    height: 4.75rem;
+    border-radius: 10px;
+  }
+
+  .thumb-button span {
+    font-size: 0.66rem;
+    line-height: 1.2;
+  }
+
+  .scrubber {
+    margin-top: 0.62rem;
+    padding: 0.68rem 0.78rem;
+  }
+
+  .scrubber__head {
+    margin-bottom: 0.45rem;
+  }
+
+  .scrubber__head label,
+  .scrubber output {
+    font-size: 0.76rem;
+  }
+
+  .image-stage__placeholder {
+    inset: 0.75rem;
+    padding: 1rem;
+    font-size: 0.82rem;
+  }
+
+  .image-stage__placeholder strong {
+    font-size: 0.98rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .hero__meta {
+    min-width: 0;
+  }
+
+  .summary-card {
+    padding: 0.72rem 0.82rem;
+  }
+
+  .summary-card strong {
+    font-size: 1.3rem;
+  }
+
+  .image-stage.is-portrait img {
+    width: min(82vw, 24rem);
   }
 }

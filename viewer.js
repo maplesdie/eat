@@ -158,19 +158,27 @@ function loadCurrentImage(item) {
   elements.recipeImage.dataset.src = item.src;
   elements.recipeImage.alt = `${item.title}，第 ${state.currentIndex + 1} 张`;
   elements.imageStage.classList.add("is-loading");
+  elements.imageStage.classList.remove("is-portrait", "is-landscape", "is-square");
   elements.recipeImage.hidden = true;
   showPlaceholder(`正在载入 ${item.title}`, "如果图片较大，请稍等片刻。");
   elements.recipeImage.src = item.src;
 }
 
 function handleImageLoad() {
+  const { naturalWidth, naturalHeight } = elements.recipeImage;
+  const ratio = naturalHeight / Math.max(naturalWidth, 1);
+
   elements.imageStage.classList.remove("is-loading");
+  elements.imageStage.classList.toggle("is-portrait", ratio > 1.2);
+  elements.imageStage.classList.toggle("is-landscape", ratio < 0.85);
+  elements.imageStage.classList.toggle("is-square", ratio >= 0.85 && ratio <= 1.2);
   elements.imagePlaceholder.hidden = true;
   elements.recipeImage.hidden = false;
 }
 
 function handleImageError() {
   elements.imageStage.classList.remove("is-loading");
+  elements.imageStage.classList.remove("is-portrait", "is-landscape", "is-square");
   elements.recipeImage.hidden = true;
   elements.imagePlaceholder.hidden = true;
   showToast("当前图片暂时无法显示，请切换下一张。");
