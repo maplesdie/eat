@@ -15,10 +15,8 @@ const elements = {
   progressText: document.getElementById("progressText"),
   recipeTitle: document.getElementById("recipeTitle"),
   recipeCounter: document.getElementById("recipeCounter"),
-  recipeStatus: document.getElementById("recipeStatus"),
   imageStage: document.getElementById("imageStage"),
   imagePlaceholder: document.getElementById("imagePlaceholder"),
-  imageError: document.getElementById("imageError"),
   recipeImage: document.getElementById("recipeImage"),
   recipeSlider: document.getElementById("recipeSlider"),
   sliderLabel: document.getElementById("sliderLabel"),
@@ -30,8 +28,6 @@ const elements = {
   prevButton: document.getElementById("prevButton"),
   nextButton: document.getElementById("nextButton"),
   toggleCookedButton: document.getElementById("toggleCookedButton"),
-  nextUncookedButton: document.getElementById("nextUncookedButton"),
-  copyLinkButton: document.getElementById("copyLinkButton"),
   thumbStrip: document.getElementById("thumbStrip"),
   thumbRangeLabel: document.getElementById("thumbRangeLabel"),
   toast: document.getElementById("toast"),
@@ -56,8 +52,6 @@ function bindEvents() {
   elements.prevButton.addEventListener("click", () => goToIndex(state.currentIndex - 1));
   elements.nextButton.addEventListener("click", () => goToIndex(state.currentIndex + 1));
   elements.toggleCookedButton.addEventListener("click", toggleCookedState);
-  elements.nextUncookedButton.addEventListener("click", jumpToNextUncooked);
-  elements.copyLinkButton.addEventListener("click", copyCurrentLink);
 
   elements.recipeSlider.addEventListener("input", (event) => {
     const index = Number.parseInt(event.target.value, 10) - 1;
@@ -95,8 +89,6 @@ function normalizeManifest(manifest) {
 function renderEmpty() {
   elements.recipeTitle.textContent = "还没有可浏览的食谱图";
   elements.recipeCounter.textContent = "0 / 0";
-  elements.recipeStatus.dataset.state = "idle";
-  elements.recipeStatus.textContent = "未找到图片";
   elements.recipeFileName.textContent = "请先准备图片清单";
   elements.recipeHint.textContent =
     "把图片放进 recipes、images 或 gallery 目录，然后运行一次清单生成脚本。";
@@ -109,8 +101,8 @@ function renderEmpty() {
   elements.prevButton.disabled = true;
   elements.nextButton.disabled = true;
   elements.toggleCookedButton.disabled = true;
-  elements.nextUncookedButton.disabled = true;
-  elements.copyLinkButton.disabled = true;
+  elements.toggleCookedButton.classList.remove("is-cooked");
+  elements.toggleCookedButton.setAttribute("aria-pressed", "false");
   elements.thumbStrip.replaceChildren();
   elements.thumbRangeLabel.textContent = "无";
   showPlaceholder("还没有载入图片", "请先生成 recipes-manifest.js 后再打开这个页面。");
@@ -129,8 +121,6 @@ function renderCurrent(forceImageUpdate = false) {
 
   elements.recipeTitle.textContent = item.title;
   elements.recipeCounter.textContent = `${state.currentIndex + 1} / ${state.items.length}`;
-  elements.recipeStatus.dataset.state = cooked ? "cooked" : "uncooked";
-  elements.recipeStatus.textContent = cooked ? "已做" : "未做";
   elements.recipeFileName.textContent = item.fileName;
   elements.recipeHint.textContent = cooked
     ? "这道已经被标记为已烹饪，可以继续浏览下一道。"
@@ -149,11 +139,10 @@ function renderCurrent(forceImageUpdate = false) {
 
   elements.prevButton.disabled = state.currentIndex <= 0;
   elements.nextButton.disabled = state.currentIndex >= state.items.length - 1;
-  elements.nextUncookedButton.disabled = doneCount === state.items.length;
-  elements.copyLinkButton.disabled = false;
   elements.toggleCookedButton.disabled = false;
   elements.toggleCookedButton.classList.toggle("is-cooked", cooked);
-  elements.toggleCookedButton.textContent = cooked ? "取消已做" : "标记已做";
+  elements.toggleCookedButton.setAttribute("aria-pressed", cooked ? "true" : "false");
+  elements.toggleCookedButton.setAttribute("title", cooked ? "取消已做" : "标记已做");
 
   renderThumbStrip();
   updateHash();
@@ -170,7 +159,6 @@ function loadCurrentImage(item) {
   elements.recipeImage.alt = `${item.title}，第 ${state.currentIndex + 1} 张`;
   elements.imageStage.classList.add("is-loading");
   elements.recipeImage.hidden = true;
-  elements.imageError.hidden = true;
   showPlaceholder(`正在载入 ${item.title}`, "如果图片较大，请稍等片刻。");
   elements.recipeImage.src = item.src;
 }
@@ -178,7 +166,6 @@ function loadCurrentImage(item) {
 function handleImageLoad() {
   elements.imageStage.classList.remove("is-loading");
   elements.imagePlaceholder.hidden = true;
-  elements.imageError.hidden = true;
   elements.recipeImage.hidden = false;
 }
 
@@ -186,7 +173,7 @@ function handleImageError() {
   elements.imageStage.classList.remove("is-loading");
   elements.recipeImage.hidden = true;
   elements.imagePlaceholder.hidden = true;
-  elements.imageError.hidden = false;
+  showToast("当前图片暂时无法显示，请切换下一张。");
 }
 
 function goToIndex(index) {
@@ -219,24 +206,6 @@ function toggleCookedState() {
   persistCookedMap();
   renderCurrent();
   showToast(nextValue ? "已标记为已做。" : "已取消已做标记。");
-}
-
-function jumpToNextUncooked() {
-  if (state.items.length === 0) {
-    return;
-  }
-
-  const total = state.items.length;
-
-  for (let step = 1; step <= total; step += 1) {
-    const candidateIndex = (state.currentIndex + step) % total;
-    if (!isCooked(state.items[candidateIndex])) {
-      goToIndex(candidateIndex);
-      return;
-    }
-  }
-
-  showToast("当前所有食谱都已经标记完成。");
 }
 
 function renderThumbStrip() {
@@ -377,34 +346,6 @@ function preloadNearbyImages() {
     const image = new Image();
     image.src = state.items[index].src;
   });
-}
-
-async function copyCurrentLink() {
-  const url = window.location.href;
-
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(url);
-    } else {
-      fallbackCopy(url);
-    }
-
-    showToast("当前图片链接已复制。");
-  } catch (error) {
-    showToast("复制失败，请手动复制地址栏链接。");
-  }
-}
-
-function fallbackCopy(text) {
-  const input = document.createElement("textarea");
-  input.value = text;
-  input.setAttribute("readonly", "");
-  input.style.position = "fixed";
-  input.style.opacity = "0";
-  document.body.append(input);
-  input.select();
-  document.execCommand("copy");
-  input.remove();
 }
 
 function showPlaceholder(title, hint) {

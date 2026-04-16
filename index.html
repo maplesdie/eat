@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0f7665" />
     <title>掌上食谱簿 | 手机食谱浏览器</title>
-    <link rel="stylesheet" href="./viewer.css" />
+    <link rel="stylesheet" href="./viewer.css?v=3" />
   </head>
   <body>
     <div class="scene-noise" aria-hidden="true"></div>
@@ -40,25 +40,34 @@
               <p class="eyebrow">CURRENT CARD</p>
               <h2 id="recipeTitle">准备载入</h2>
             </div>
-
-            <div class="stage-card__badges">
-              <span class="counter-badge" id="recipeCounter">0 / 0</span>
-              <span class="status-badge" id="recipeStatus" data-state="idle">待加载</span>
-            </div>
+            <span class="counter-badge" id="recipeCounter">0 / 0</span>
           </div>
 
           <div class="image-stage" id="imageStage">
+            <button class="image-nav image-nav--prev" id="prevButton" type="button" aria-label="上一张">
+              <span aria-hidden="true">‹</span>
+            </button>
+
+            <button
+              class="cook-toggle"
+              id="toggleCookedButton"
+              type="button"
+              aria-label="标记已做"
+              aria-pressed="false"
+            >
+              <span class="cook-toggle__box" aria-hidden="true"></span>
+            </button>
+
+            <button class="image-nav image-nav--next" id="nextButton" type="button" aria-label="下一张">
+              <span aria-hidden="true">›</span>
+            </button>
+
             <div class="image-stage__placeholder" id="imagePlaceholder">
               <strong>食谱图片会显示在这里</strong>
               <span>如果你后续放入 500 多张图，只要刷新图片清单后重新部署即可。</span>
             </div>
 
             <img id="recipeImage" alt="" hidden />
-
-            <div class="image-stage__overlay" id="imageError" hidden>
-              <strong>这张图片加载失败</strong>
-              <span>可能是当前设备不支持该图片格式，或文件路径已经变化。</span>
-            </div>
           </div>
 
           <div class="scrubber">
@@ -88,23 +97,6 @@
             <p id="progressCaption">已标记 0 张，未标记 0 张。</p>
           </section>
 
-          <section class="action-stack" aria-label="浏览控制">
-            <div class="action-row action-row--main">
-              <button class="nav-button" id="prevButton" type="button">上一张</button>
-              <button class="mark-button" id="toggleCookedButton" type="button">标记已做</button>
-              <button class="nav-button" id="nextButton" type="button">下一张</button>
-            </div>
-
-            <div class="action-row">
-              <button class="secondary-button" id="nextUncookedButton" type="button">
-                跳到下一张未做
-              </button>
-              <button class="secondary-button" id="copyLinkButton" type="button">
-                复制当前链接
-              </button>
-            </div>
-          </section>
-
           <section class="thumb-panel" aria-labelledby="thumbPanelTitle">
             <div class="thumb-panel__head">
               <h3 id="thumbPanelTitle">附近食谱</h3>
@@ -122,7 +114,7 @@
 
     <div class="toast" id="toast" hidden></div>
 
-    <script src="./recipes-manifest.js"></script>
-    <script src="./viewer.js"></script>
+    <script src="./recipes-manifest.js?v=3"></script>
+    <script src="./viewer.js?v=3"></script>
   </body>
 </html>
