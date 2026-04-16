@@ -149,6 +149,10 @@ function loadCurrentImage(item) {
   elements.recipeImage.hidden = true;
   showPlaceholder(`正在载入 ${item.title}`, "如果图片较大，请稍等片刻。");
   elements.recipeImage.src = item.src;
+
+  if (elements.recipeImage.complete && elements.recipeImage.naturalWidth > 0) {
+    window.requestAnimationFrame(handleImageLoad);
+  }
 }
 
 function handleImageLoad() {
