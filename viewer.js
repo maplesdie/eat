@@ -1,5 +1,4 @@
 const STORAGE_KEY = `cookbook-progress-v1::${window.location.pathname}`;
-const THUMB_WINDOW = 9;
 
 const state = {
   items: [],
@@ -22,14 +21,9 @@ const elements = {
   sliderLabel: document.getElementById("sliderLabel"),
   recipeFileName: document.getElementById("recipeFileName"),
   recipeHint: document.getElementById("recipeHint"),
-  progressPercent: document.getElementById("progressPercent"),
-  progressFill: document.getElementById("progressFill"),
-  progressCaption: document.getElementById("progressCaption"),
   prevButton: document.getElementById("prevButton"),
   nextButton: document.getElementById("nextButton"),
   toggleCookedButton: document.getElementById("toggleCookedButton"),
-  thumbStrip: document.getElementById("thumbStrip"),
-  thumbRangeLabel: document.getElementById("thumbRangeLabel"),
   toast: document.getElementById("toast"),
 };
 
@@ -94,17 +88,12 @@ function renderEmpty() {
     "把图片放进 recipes、images 或 gallery 目录，然后运行一次清单生成脚本。";
   elements.doneMetric.textContent = "0 / 0";
   elements.progressText.textContent = "当前 recipes-manifest.js 里没有图片。";
-  elements.progressPercent.textContent = "0%";
-  elements.progressFill.style.width = "0%";
-  elements.progressCaption.textContent = "等待加入食谱图片。";
   elements.recipeSlider.disabled = true;
   elements.prevButton.disabled = true;
   elements.nextButton.disabled = true;
   elements.toggleCookedButton.disabled = true;
   elements.toggleCookedButton.classList.remove("is-cooked");
   elements.toggleCookedButton.setAttribute("aria-pressed", "false");
-  elements.thumbStrip.replaceChildren();
-  elements.thumbRangeLabel.textContent = "无";
   showPlaceholder("还没有载入图片", "请先生成 recipes-manifest.js 后再打开这个页面。");
 }
 
@@ -117,7 +106,6 @@ function renderCurrent(forceImageUpdate = false) {
   const item = getCurrentItem();
   const cooked = isCooked(item);
   const doneCount = getDoneCount();
-  const percent = Math.round((doneCount / state.items.length) * 100);
 
   elements.recipeTitle.textContent = item.title;
   elements.recipeCounter.textContent = `${state.currentIndex + 1} / ${state.items.length}`;
@@ -128,9 +116,6 @@ function renderCurrent(forceImageUpdate = false) {
 
   elements.doneMetric.textContent = `${doneCount} / ${state.items.length}`;
   elements.progressText.textContent = `还剩 ${state.items.length - doneCount} 张未做。`;
-  elements.progressPercent.textContent = `${percent}%`;
-  elements.progressFill.style.width = `${percent}%`;
-  elements.progressCaption.textContent = `已标记 ${doneCount} 张，未标记 ${state.items.length - doneCount} 张。`;
 
   elements.recipeSlider.disabled = false;
   elements.recipeSlider.max = String(state.items.length);
@@ -143,8 +128,6 @@ function renderCurrent(forceImageUpdate = false) {
   elements.toggleCookedButton.classList.toggle("is-cooked", cooked);
   elements.toggleCookedButton.setAttribute("aria-pressed", cooked ? "true" : "false");
   elements.toggleCookedButton.setAttribute("title", cooked ? "取消已做" : "标记已做");
-
-  renderThumbStrip();
   updateHash();
 
   if (forceImageUpdate || elements.recipeImage.dataset.src !== item.src) {
@@ -214,41 +197,6 @@ function toggleCookedState() {
   persistCookedMap();
   renderCurrent();
   showToast(nextValue ? "已标记为已做。" : "已取消已做标记。");
-}
-
-function renderThumbStrip() {
-  const total = state.items.length;
-  const before = Math.floor((THUMB_WINDOW - 1) / 2);
-  const start = clamp(state.currentIndex - before, 0, Math.max(total - THUMB_WINDOW, 0));
-  const end = Math.min(start + THUMB_WINDOW, total);
-  const fragment = document.createDocumentFragment();
-
-  for (let index = start; index < end; index += 1) {
-    const item = state.items[index];
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "thumb-button";
-    button.classList.add(isCooked(item) ? "is-cooked" : "is-uncooked");
-
-    if (index === state.currentIndex) {
-      button.classList.add("is-current");
-    }
-
-    const image = document.createElement("img");
-    image.src = item.src;
-    image.alt = "";
-    image.loading = "lazy";
-
-    const label = document.createElement("span");
-    label.textContent = `${index + 1}. ${item.title}`;
-
-    button.append(image, label);
-    button.addEventListener("click", () => goToIndex(index));
-    fragment.append(button);
-  }
-
-  elements.thumbStrip.replaceChildren(fragment);
-  elements.thumbRangeLabel.textContent = `${start + 1}-${end}`;
 }
 
 function handleKeydown(event) {

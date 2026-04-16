@@ -44,30 +44,35 @@
           </div>
 
           <div class="image-stage" id="imageStage">
-            <button class="image-nav image-nav--prev" id="prevButton" type="button" aria-label="上一张">
-              <span aria-hidden="true">‹</span>
-            </button>
-
-            <button
-              class="cook-toggle"
-              id="toggleCookedButton"
-              type="button"
-              aria-label="标记已做"
-              aria-pressed="false"
-            >
-              <span class="cook-toggle__box" aria-hidden="true"></span>
-            </button>
-
-            <button class="image-nav image-nav--next" id="nextButton" type="button" aria-label="下一张">
-              <span aria-hidden="true">›</span>
-            </button>
-
             <div class="image-stage__placeholder" id="imagePlaceholder">
               <strong>食谱图片会显示在这里</strong>
               <span>如果你后续放入 500 多张图，只要刷新图片清单后重新部署即可。</span>
             </div>
 
             <img id="recipeImage" alt="" hidden />
+          </div>
+
+          <div class="stage-actions">
+            <button class="stage-action stage-action--nav" id="prevButton" type="button" aria-label="上一张">
+              <span class="stage-action__icon" aria-hidden="true">‹</span>
+              <span class="stage-action__label">上一张</span>
+            </button>
+
+            <button
+              class="stage-action stage-action--cook"
+              id="toggleCookedButton"
+              type="button"
+              aria-label="标记已做"
+              aria-pressed="false"
+            >
+              <span class="cook-toggle__box" aria-hidden="true"></span>
+              <span class="stage-action__label">标记已做</span>
+            </button>
+
+            <button class="stage-action stage-action--nav" id="nextButton" type="button" aria-label="下一张">
+              <span class="stage-action__icon" aria-hidden="true">›</span>
+              <span class="stage-action__label">下一张</span>
+            </button>
           </div>
 
           <div class="scrubber">
@@ -77,38 +82,12 @@
             </div>
             <input id="recipeSlider" type="range" min="1" max="1" value="1" />
           </div>
-        </article>
 
-        <aside class="control-card">
-          <section class="detail-block">
-            <p class="eyebrow">DETAILS</p>
+          <section class="stage-meta">
             <h3 id="recipeFileName">尚未载入图片</h3>
             <p id="recipeHint">左右切换查看图片，也可以拖动滑块快速跳转。</p>
           </section>
-
-          <section class="progress-panel">
-            <div class="progress-panel__head">
-              <span>完成率</span>
-              <strong id="progressPercent">0%</strong>
-            </div>
-            <div class="progress-bar" aria-hidden="true">
-              <span id="progressFill"></span>
-            </div>
-            <p id="progressCaption">已标记 0 张，未标记 0 张。</p>
-          </section>
-
-          <section class="thumb-panel" aria-labelledby="thumbPanelTitle">
-            <div class="thumb-panel__head">
-              <h3 id="thumbPanelTitle">附近食谱</h3>
-              <span id="thumbRangeLabel">--</span>
-            </div>
-            <div class="thumb-strip" id="thumbStrip"></div>
-          </section>
-
-          <p class="storage-note">
-            标记状态保存在当前浏览器的本地存储里。换设备或清空浏览器数据后需要重新标记。
-          </p>
-        </aside>
+        </article>
       </section>
     </main>
 
