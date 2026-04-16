@@ -6,6 +6,7 @@ const state = {
   cookedMap: loadCookedMap(),
   toastTimer: null,
   ignoreHashChange: false,
+  overviewOpen: false,
   swipeStart: null,
 };
 
@@ -17,13 +18,17 @@ const elements = {
   imageStage: document.getElementById("imageStage"),
   imagePlaceholder: document.getElementById("imagePlaceholder"),
   recipeImage: document.getElementById("recipeImage"),
-  recipeSlider: document.getElementById("recipeSlider"),
-  sliderLabel: document.getElementById("sliderLabel"),
   recipeFileName: document.getElementById("recipeFileName"),
   recipeHint: document.getElementById("recipeHint"),
   prevButton: document.getElementById("prevButton"),
   nextButton: document.getElementById("nextButton"),
   toggleCookedButton: document.getElementById("toggleCookedButton"),
+  overviewButton: document.getElementById("overviewButton"),
+  overviewModal: document.getElementById("overviewModal"),
+  overviewBackdrop: document.getElementById("overviewBackdrop"),
+  overviewGrid: document.getElementById("overviewGrid"),
+  overviewCloseButton: document.getElementById("overviewCloseButton"),
+  overviewStats: document.getElementById("overviewStats"),
   toast: document.getElementById("toast"),
 };
 
@@ -46,11 +51,9 @@ function bindEvents() {
   elements.prevButton.addEventListener("click", () => goToIndex(state.currentIndex - 1));
   elements.nextButton.addEventListener("click", () => goToIndex(state.currentIndex + 1));
   elements.toggleCookedButton.addEventListener("click", toggleCookedState);
-
-  elements.recipeSlider.addEventListener("input", (event) => {
-    const index = Number.parseInt(event.target.value, 10) - 1;
-    goToIndex(index);
-  });
+  elements.overviewButton.addEventListener("click", toggleOverview);
+  elements.overviewCloseButton.addEventListener("click", closeOverview);
+  elements.overviewBackdrop.addEventListener("click", closeOverview);
 
   elements.recipeImage.addEventListener("load", handleImageLoad);
   elements.recipeImage.addEventListener("error", handleImageError);
@@ -84,16 +87,19 @@ function renderEmpty() {
   elements.recipeTitle.textContent = "还没有可浏览的食谱图";
   elements.recipeCounter.textContent = "0 / 0";
   elements.recipeFileName.textContent = "请先准备图片清单";
-  elements.recipeHint.textContent =
-    "把图片放进 recipes、images 或 gallery 目录，然后运行一次清单生成脚本。";
+  elements.recipeHint.textContent = "把图片放进 recipes、images 或 gallery 目录，然后运行一次清单生成脚本。";
   elements.doneMetric.textContent = "0 / 0";
   elements.progressText.textContent = "当前 recipes-manifest.js 里没有图片。";
-  elements.recipeSlider.disabled = true;
   elements.prevButton.disabled = true;
   elements.nextButton.disabled = true;
   elements.toggleCookedButton.disabled = true;
+  elements.overviewButton.disabled = true;
+  elements.overviewButton.setAttribute("aria-expanded", "false");
   elements.toggleCookedButton.classList.remove("is-cooked");
   elements.toggleCookedButton.setAttribute("aria-pressed", "false");
+  elements.overviewStats.textContent = "当前没有可跳转的食谱。";
+  elements.overviewGrid.replaceChildren();
+  closeOverview();
   showPlaceholder("还没有载入图片", "请先生成 recipes-manifest.js 后再打开这个页面。");
 }
 
@@ -112,23 +118,21 @@ function renderCurrent(forceImageUpdate = false) {
   elements.recipeFileName.textContent = item.fileName;
   elements.recipeHint.textContent = cooked
     ? "这道已经被标记为已烹饪，可以继续浏览下一道。"
-    : "这道还没做，做完后点中间按钮就能记录状态。";
+    : "这道还没做，做完后点“标记已做”就能记录状态，也可以打开总览快速跳转。";
 
   elements.doneMetric.textContent = `${doneCount} / ${state.items.length}`;
   elements.progressText.textContent = `还剩 ${state.items.length - doneCount} 张未做。`;
 
-  elements.recipeSlider.disabled = false;
-  elements.recipeSlider.max = String(state.items.length);
-  elements.recipeSlider.value = String(state.currentIndex + 1);
-  elements.sliderLabel.textContent = `${state.currentIndex + 1} / ${state.items.length}`;
-
   elements.prevButton.disabled = state.currentIndex <= 0;
   elements.nextButton.disabled = state.currentIndex >= state.items.length - 1;
   elements.toggleCookedButton.disabled = false;
+  elements.overviewButton.disabled = false;
   elements.toggleCookedButton.classList.toggle("is-cooked", cooked);
   elements.toggleCookedButton.setAttribute("aria-pressed", cooked ? "true" : "false");
   elements.toggleCookedButton.setAttribute("title", cooked ? "取消已做" : "标记已做");
+  elements.overviewButton.setAttribute("title", `打开总览，快速跳到第 ${state.currentIndex + 1} 张附近`);
   updateHash();
+  renderOverview();
 
   if (forceImageUpdate || elements.recipeImage.dataset.src !== item.src) {
     loadCurrentImage(item);
@@ -199,9 +203,86 @@ function toggleCookedState() {
   showToast(nextValue ? "已标记为已做。" : "已取消已做标记。");
 }
 
+function toggleOverview() {
+  if (state.items.length === 0) {
+    return;
+  }
+
+  if (state.overviewOpen) {
+    closeOverview();
+    return;
+  }
+
+  openOverview();
+}
+
+function openOverview() {
+  if (state.items.length === 0) {
+    return;
+  }
+
+  state.overviewOpen = true;
+  renderOverview();
+  elements.overviewModal.hidden = false;
+  elements.overviewButton.setAttribute("aria-expanded", "true");
+  document.body.classList.add("is-modal-open");
+}
+
+function closeOverview() {
+  state.overviewOpen = false;
+  elements.overviewModal.hidden = true;
+  elements.overviewButton.setAttribute("aria-expanded", "false");
+  document.body.classList.remove("is-modal-open");
+}
+
+function renderOverview() {
+  const total = state.items.length;
+  const doneCount = getDoneCount();
+  const fragment = document.createDocumentFragment();
+
+  elements.overviewStats.textContent =
+    total > 0 ? `已完成 ${doneCount} / ${total}，点击数字可以直接跳转。` : "当前没有可跳转的食谱。";
+
+  for (let index = 0; index < total; index += 1) {
+    const item = state.items[index];
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "overview-grid__item";
+    button.textContent = String(index + 1);
+    button.setAttribute("aria-label", `跳转到第 ${index + 1} 张食谱`);
+
+    if (isCooked(item)) {
+      button.classList.add("is-cooked");
+    }
+
+    if (index === state.currentIndex) {
+      button.classList.add("is-current");
+    }
+
+    button.addEventListener("click", () => {
+      closeOverview();
+      goToIndex(index);
+    });
+
+    fragment.append(button);
+  }
+
+  elements.overviewGrid.replaceChildren(fragment);
+}
+
 function handleKeydown(event) {
   const tagName = event.target?.tagName;
   if (tagName === "INPUT" || tagName === "TEXTAREA") {
+    return;
+  }
+
+  if (event.key === "Escape" && state.overviewOpen) {
+    event.preventDefault();
+    closeOverview();
+    return;
+  }
+
+  if (state.overviewOpen) {
     return;
   }
 

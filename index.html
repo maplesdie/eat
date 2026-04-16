@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0f7665" />
     <title>掌上食谱簿 | 手机食谱浏览器</title>
-    <link rel="stylesheet" href="./viewer.css?v=4" />
+    <link rel="stylesheet" href="./viewer.css?v=5" />
   </head>
   <body>
     <div class="scene-noise" aria-hidden="true"></div>
@@ -69,31 +69,52 @@
               <span class="stage-action__label">标记已做</span>
             </button>
 
+            <button
+              class="stage-action stage-action--overview"
+              id="overviewButton"
+              type="button"
+              aria-label="打开总览"
+              aria-controls="overviewModal"
+              aria-expanded="false"
+            >
+              <span class="stage-action__icon" aria-hidden="true">▦</span>
+              <span class="stage-action__label">总览</span>
+            </button>
             <button class="stage-action stage-action--nav" id="nextButton" type="button" aria-label="下一张">
               <span class="stage-action__icon" aria-hidden="true">›</span>
               <span class="stage-action__label">下一张</span>
             </button>
           </div>
 
-          <div class="scrubber">
-            <div class="scrubber__head">
-              <label for="recipeSlider">浏览进度</label>
-              <output id="sliderLabel">--</output>
-            </div>
-            <input id="recipeSlider" type="range" min="1" max="1" value="1" />
-          </div>
-
           <section class="stage-meta">
             <h3 id="recipeFileName">尚未载入图片</h3>
-            <p id="recipeHint">左右切换查看图片，也可以拖动滑块快速跳转。</p>
+            <p id="recipeHint">左右切换查看图片，也可以打开总览快速跳转。</p>
           </section>
         </article>
       </section>
     </main>
 
+    <div class="overview-modal" id="overviewModal" hidden>
+      <div class="overview-modal__backdrop" id="overviewBackdrop"></div>
+      <section class="overview-modal__panel" aria-labelledby="overviewTitle" aria-modal="true" role="dialog">
+        <div class="overview-modal__head">
+          <div>
+            <p class="eyebrow">RECIPE OVERVIEW</p>
+            <h2 id="overviewTitle">食谱总览</h2>
+          </div>
+          <button class="overview-modal__close" id="overviewCloseButton" type="button" aria-label="关闭总览">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        <p class="overview-modal__stats" id="overviewStats">正在整理总览…</p>
+        <div class="overview-grid" id="overviewGrid"></div>
+      </section>
+    </div>
+
     <div class="toast" id="toast" hidden></div>
 
-    <script src="./recipes-manifest.js?v=4"></script>
-    <script src="./viewer.js?v=4"></script>
+    <script src="./recipes-manifest.js?v=5"></script>
+    <script src="./viewer.js?v=5"></script>
   </body>
 </html>
